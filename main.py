@@ -277,10 +277,20 @@ async def check_url(request: Request, call_next):
 
 @app.get("/v1/models")
 @app.get("/models")
-async def get_models():
+async def get_models(request: Request):
     """
-    Returns the available pipelines
+    Returns the available pipelines/models
+    Added support for API key authentication
     """
+    # Get the API key from the request headers
+    api_key = request.headers.get("Authorization")
+    
+    # Extract the token part if it's in the "Bearer <token>" format
+    if api_key and api_key.startswith("Bearer "):
+        api_key = api_key.split("Bearer ")[1].strip()
+    else:
+        api_key = None
+        print("No API key provided in the request headers")
     app.state.PIPELINES = get_all_pipelines()
     return {
         "data": [
@@ -649,9 +659,32 @@ async def filter_outlet(pipeline_id: str, form_data: FilterForm):
         )
 
 
+def print_form_data(form_data: OpenAIChatCompletionForm):
+    print("Form Data:")
+    for field, value in form_data.model_dump().items():
+        if value is not None:
+            if field == "messages":
+                print("  Messages:")
+                for idx, message in enumerate(value):
+                    print(f"    Message {idx + 1}:")
+                    for msg_field, msg_value in message.items():
+                        print(f"      {msg_field}: {msg_value}")
+            elif field == "functions":
+                print("  Functions:")
+                for idx, function in enumerate(value):
+                    print(f"    Function {idx + 1}:")
+                    for func_field, func_value in function.items():
+                        print(f"      {func_field}: {func_value}")
+            else:
+                print(f"  {field}: {value}")
+
 @app.post("/v1/chat/completions")
 @app.post("/chat/completions")
 async def generate_openai_chat_completion(form_data: OpenAIChatCompletionForm):
+    print("Generating OpenAI Chat Completion")
+    print("--------------------------------")
+    print_form_data(form_data)
+    print("--------------------------------")
     messages = [message.model_dump() for message in form_data.messages]
     user_message = get_last_user_message(messages)
 
