@@ -12,6 +12,8 @@ from utils.pipelines.auth import bearer_security, get_current_user
 from utils.pipelines.main import get_last_user_message, stream_message_template
 from utils.pipelines.misc import convert_to_raw_url
 
+from utils.lamb.util import print_form_data 
+
 from contextlib import asynccontextmanager
 from concurrent.futures import ThreadPoolExecutor
 from schemas import FilterForm, OpenAIChatCompletionForm
@@ -659,24 +661,7 @@ async def filter_outlet(pipeline_id: str, form_data: FilterForm):
         )
 
 
-def print_form_data(form_data: OpenAIChatCompletionForm):
-    print("Form Data:")
-    for field, value in form_data.model_dump().items():
-        if value is not None:
-            if field == "messages":
-                print("  Messages:")
-                for idx, message in enumerate(value):
-                    print(f"    Message {idx + 1}:")
-                    for msg_field, msg_value in message.items():
-                        print(f"      {msg_field}: {msg_value}")
-            elif field == "functions":
-                print("  Functions:")
-                for idx, function in enumerate(value):
-                    print(f"    Function {idx + 1}:")
-                    for func_field, func_value in function.items():
-                        print(f"      {func_field}: {func_value}")
-            else:
-                print(f"  {field}: {value}")
+
 
 @app.post("/v1/chat/completions")
 @app.post("/chat/completions")
